@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/media/sf_orca/src/Hungarian.cpp
+stdlib.h
+-
+cfloat
+-
+cmath
+-
+Hungarian.h
+/media/sf_orca/src/Hungarian.h
+
+/media/sf_orca/src/Hungarian.h
+iostream
+-
+vector
+-
+
