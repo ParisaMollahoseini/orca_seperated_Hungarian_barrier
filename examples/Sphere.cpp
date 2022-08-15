@@ -71,10 +71,10 @@ float radius_;
 
 // Hungarian
 
-vector<vector<double>> find_distance_table(int number_of_point, float x_start[], float y_start[], float z_start[], float x_goal[], float y_goal[], float z_goal[])
+vector<vector<long double>> find_distance_table(int number_of_point, float x_start[], float y_start[], float z_start[], float x_goal[], float y_goal[], float z_goal[])
 {
 
-	vector<vector<double>> distance_table(number_of_point, vector<double>(number_of_point, 0));
+	vector<vector<long double>> distance_table(number_of_point, vector<long double>(number_of_point, 0));
 	for (int i = 0; i < number_of_point; i++)
 	{
 		float x_s = x_start[i];
@@ -87,7 +87,7 @@ vector<vector<double>> find_distance_table(int number_of_point, float x_start[],
 			float y_g = y_goal[j];
 			float z_g = z_goal[j];
 
-			double distance = sqrt(pow((x_s - x_g), 2) + pow((y_s - y_g), 2) + pow((z_s - z_g), 2));
+			long double distance = sqrt(pow((x_s - x_g), 2) + pow((y_s - y_g), 2) + pow((z_s - z_g), 2));
 			distance_table[i][j] = distance;
 			//cout << distance<< "\t";
 
@@ -103,18 +103,15 @@ vector<vector<double>> find_distance_table(int number_of_point, float x_start[],
 void change_order_of_goals(int number_of_point, vector<int> assignment, float x_goal[], float y_goal[], float z_goal[])
 {
 
-
 	float* x_goal_copy = new float[number_of_point];
 	float* y_goal_copy = new float[number_of_point];
 	float* z_goal_copy = new float[number_of_point];
-
 	for (int i = 0; i < number_of_point; i++)
 	{
 		x_goal_copy[i] = x_goal[i];
 		y_goal_copy[i] = y_goal[i];
 		z_goal_copy[i] = z_goal[i];
 	}
-
 
 	for (unsigned int x = 0; x < number_of_point; x++)
 	{
@@ -125,7 +122,6 @@ void change_order_of_goals(int number_of_point, vector<int> assignment, float x_
 		y_goal[x] = y_goal_copy[best_goal_index];
 		z_goal[x] = z_goal_copy[best_goal_index];
 	}
-
 	delete[] x_goal_copy;
 	delete[] y_goal_copy;
 	delete[] z_goal_copy;
@@ -159,7 +155,7 @@ void setupScenario()
 	//read barrier file
 	std::string text;
 	std::ifstream BarFile("barrier.txt");
-	radius_ = 6.0f;
+	radius_ = 1.5f;
 
 	while (getline(BarFile, text)) {
 		std::stringstream   lineStream(text);    // convert your line into a stream.
@@ -207,75 +203,92 @@ void setupScenario()
 
 	time_step = 1.0f;
 	globalTime_ = 0;
-	int num = 12;
-	float x_list[12] = { 36.0 ,30.0 ,16.0 ,-2.1,-20.0,-35.0,-40.0,-35.0 ,-20.0,-2.1,16.0,30.6 };//, -3.0, -3.0, -30.7, 30.1};//
-	float y_list[12] = { 5.0 ,22.4 , 34.0, 37.7 ,34.0,22.4, 5.0, -12.4, -24.0 ,-27.7 ,-24.0 ,-12.4 };// , 20.8, -10.5, 6.0, 6.0 };//};
-	float z_list[12] = { 0,0,0,0,0,0,0,0 ,0,0,0,0 };
-	float x_goal_list[12] = { -60.0 ,52.3 ,52.3,-60.0,-32.0,-32.0,-4.0,-4.0, 24.2, 24.2, -60.0, 52.3 };// , -30.4, -20.5, -5, 10.4};// };
-	float y_goal_list[12] = { 34.4,34.4,-20.0,-20.0,34.4,-20.0,34.4,-20.0,34.4,-20.0,7.2,7.2 };//,3.0,-10.5,-20.2,-10.5 };//};
-	float z_goal_list[12] = { 0,0,0,0,0,0,0,0 ,0,0,0,0 };
 
-	//Hungarian
+	//int num = 12;
+	//float x_list[12] = { 36.0 ,30.0 ,16.0 ,-2.1,-20.0,-35.0,-40.0,-35.0 ,-20.0,-2.1,16.0,30.6 };//, -3.0, -3.0, -30.7, 30.1};//
+	//float y_list[12] = { 5.0 ,22.4 , 34.0, 37.7 ,34.0,22.4, 5.0, -12.4, -24.0 ,-27.7 ,-24.0 ,-12.4 };// , 20.8, -10.5, 6.0, 6.0 };//};
+	//float z_list[12] = { 0,0,0,0,0,0,0,0 ,0,0,0,0 };
+	//float x_goal_list[12] = { -60.0 ,52.3 ,52.3,-60.0,-32.0,-32.0,-4.0,-4.0, 24.2, 24.2, -60.0, 52.3 };// , -30.4, -20.5, -5, 10.4};// };
+	//float y_goal_list[12] = { 34.4,34.4,-20.0,-20.0,34.4,-20.0,34.4,-20.0,34.4,-20.0,7.2,7.2 };//,3.0,-10.5,-20.2,-10.5 };//};
+	//float z_goal_list[12] = { 0,0,0,0,0,0,0,0 ,0,0,0,0 };
 
-	vector< vector<double> > costMatrix = find_distance_table(num, x_list, y_list, z_list, x_goal_list, y_goal_list, z_goal_list);
+	////Hungarian
 
-	HungarianAlgorithm HungAlgo;
-	vector<int> assignment;
-
-	double cost = HungAlgo.Solve(costMatrix, assignment);
-	change_order_of_goals(num, assignment, x_goal_list, y_goal_list, z_goal_list);
-	// Hungarian
-
-	for (int i = 0; i < num; i++)
-	{
-		RVO::Vector3 pos = RVO::Vector3(x_list[i], y_list[i], z_list[i]);
-		RVO::Vector3 goal = RVO::Vector3(x_goal_list[i], y_goal_list[i], z_goal_list[i]);
-		addAgent(pos, goal, barriers_);
-
-		goals.push_back(goal);
-	}
-	//float x_list[812], y_list[812], z_list[812], x_goal_list[812], y_goal_list[812], z_goal_list[812];
-	//int count = 0;
-
-	//for (float a = 0; a < M_PI; a += 0.1f) {
-	//	const float z = 100.0f * std::cos(a);
-	//	const float r = 100.0f * std::sin(a);
-
-	//	for (size_t i = 0; i < r / 2.5f; ++i) {
-	//		const float x = r * std::cos(i * 2.0f * M_PI / (r / 2.5f));
-	//		const float y = r * std::sin(i * 2.0f * M_PI / (r / 2.5f));
-
-	//		x_list[count] = x;
-	//		y_list[count] = y;
-	//		z_list[count] = z;
-
-	//		x_goal_list[count] = -x;
-	//		y_goal_list[count] = -y;
-	//		z_goal_list[count] = -z;
-	//		
-
-	//	}
-	//}
-	//std::cout << "count\n";
-	//// Hungarian
-	//int num = 812;
 	//vector< vector<double> > costMatrix = find_distance_table(num, x_list, y_list, z_list, x_goal_list, y_goal_list, z_goal_list);
 
 	//HungarianAlgorithm HungAlgo;
 	//vector<int> assignment;
-	//std::cout << "count\n";
+
 	//double cost = HungAlgo.Solve(costMatrix, assignment);
 	//change_order_of_goals(num, assignment, x_goal_list, y_goal_list, z_goal_list);
-	//std::cout << "count\n";
 	//// Hungarian
-	//for (int k = 0; k < num; k++)
+
+	//for (int i = 0; i < num; i++)
 	//{
+	//	RVO::Vector3 pos = RVO::Vector3(x_list[i], y_list[i], z_list[i]);
+	//	RVO::Vector3 goal = RVO::Vector3(x_goal_list[i], y_goal_list[i], z_goal_list[i]);
+	//	addAgent(pos, goal, barriers_);
 
-	//	addAgent(RVO::Vector3(x_list[k], y_list[k], z_list[k]), RVO::Vector3(x_goal_list[k], y_goal_list[k], z_goal_list[k]), barriers_);
-
-	//	goals.push_back(RVO::Vector3(x_goal_list[k], y_goal_list[k], z_goal_list[k]));
+	//	goals.push_back(goal);
 	//}
+	float *x_list, *y_list, *z_list, *x_goal_list, *y_goal_list, *z_goal_list;
 
+	x_list = new float[812];
+	y_list = new float[812];
+	z_list = new float[812];
+
+	x_goal_list = new float[812];
+	y_goal_list = new float[812];
+	z_goal_list = new float[812];
+
+	int count = 0;
+
+	for (float a = 0; a < M_PI; a += 0.1f) {
+		const float z = 100.0f * std::cos(a);
+		const float r = 100.0f * std::sin(a);
+
+		for (size_t i = 0; i < r / 2.5f; ++i) {
+			const float x = r * std::cos(i * 2.0f * M_PI / (r / 2.5f));
+			const float y = r * std::sin(i * 2.0f * M_PI / (r / 2.5f));
+
+			x_list[count] = x;
+			y_list[count] = y;
+			z_list[count] = z;
+
+			x_goal_list[count] = -x;
+			y_goal_list[count] = -y;
+			z_goal_list[count] = -z;
+			count += 1;
+
+		}
+	}
+	//std::cout << "count\n";
+	// Hungarian
+	int num = 812;
+	vector< vector<long double> > costMatrix = find_distance_table(num, x_list, y_list, z_list, x_goal_list, y_goal_list, z_goal_list);
+
+	HungarianAlgorithm HungAlgo;
+	vector<int> assignment;
+	//std::cout << "count\n";
+	double cost = HungAlgo.Solve(costMatrix, assignment);
+	//std::cout << "count\n";
+	change_order_of_goals(num, assignment, x_goal_list, y_goal_list, z_goal_list);
+	
+	// Hungarian
+	for (int k = 0; k < num; k++)
+	{
+
+		addAgent(RVO::Vector3(x_list[k], y_list[k], z_list[k]), RVO::Vector3(x_goal_list[k], y_goal_list[k], z_goal_list[k]), barriers_);
+
+		goals.push_back(RVO::Vector3(x_goal_list[k], y_goal_list[k], z_goal_list[k]));
+	}
+	delete[] x_list;
+	delete[] y_list;
+	delete[] z_list;
+
+	delete[] x_goal_list;
+	delete[] y_goal_list;
+	delete[] z_goal_list;
 
 }
 

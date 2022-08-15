@@ -18,14 +18,13 @@ from random import choice
 from mayavi import mlab
 
 color_list = [
-            'b',
-            'g',
-            'r',
-            'c',
-            'm',
-            'y',
-            'k',
-            'w',
+            (205/255, 7/255, 30/255),
+            (255/255, 166/255, 0),
+            (0, 72/255, 186/255),
+            (135/255, 50/255, 96/255),
+            (102/255, 255/255, 0),
+            (153/255, 51/255, 0),
+            (253/255, 238/255, 0)
             ]
 class bcolors:
     HEADER = '\033[95m'
@@ -65,16 +64,19 @@ def check_collision(all_positions, radius):
                 collisions.append((all_positions[i], all_positions[j]))
     return collisions
 
-def create_surface(ax, redus, x, y, z, c_index, agent_num):
+def create_surface(radius, x, y, z, c_index, agent_num,isObstacle):
 
     u = np.linspace(0, 2 * np.pi, 100)
     v = np.linspace(0, np.pi, 100)
-    x = redus * np.outer(np.cos(u), np.sin(v)) + x
-    y = redus * np.outer(np.sin(u), np.sin(v)) + y
-    z = redus * np.outer(np.ones(np.size(u)), np.cos(v)) + z
+    x = radius * np.outer(np.cos(u), np.sin(v)) + x
+    y = radius * np.outer(np.sin(u), np.sin(v)) + y
+    z = radius * np.outer(np.ones(np.size(u)), np.cos(v)) + z
 
     # Plot the surface
-    shape = mlab.surf(x, y, z, color=color_list[c_index % min(len(color_list), agent_num)], warp_scale="auto")
+    if isObstacle:
+        shape = mlab.mesh(x, y, z, color=(0,0,0))
+    else:
+        shape = mlab.mesh(x, y, z, color=color_list[c_index % min(len(color_list), agent_num)])
     return shape 
 
 
@@ -85,7 +87,7 @@ def main():
                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-i", "--inputfile", help="get input file")
     parser.add_argument("-s", "--interval_speed", help="interval speed", default=1)
-    parser.add_argument("-r", "--agent_reduce", help="set agent reduce", default=5)
+    parser.add_argument("-r", "--agent_radius", help="set agent radius", default=5)
 
     args = parser.parse_args()
     config = vars(args)
@@ -96,10 +98,10 @@ def main():
     interval_speed = float(config['interval_speed'])
     LOG_FILE = config['inputfile']
     MAIN_LIST = read_log(LOG_FILE)
-    REDUCE = int(config['agent_reduce'])
+    RADIUS = float(config['agent_radius'])
+    Surface = []
 
-    #print("--------------")
-    #print(MAIN_LIST)
+
     AGENT_NUMBER = int(MAIN_LIST[0])
     X_MAX = 100
     Y_MAX = 100
@@ -116,87 +118,82 @@ def main():
     
 
     #start plot
-    fig = plt.figure()
-    ax = p3.Axes3D(fig)
-
-    #limit x & y & z
-    ax.set_xlim(X_MIN,X_MAX)
-    ax.set_ylim(Y_MIN,Y_MAX)
-    ax.set_zlim(Z_MIN,Z_MAX)
-
-    #initalize points
+    
+    fig = mlab.figure(size=(1900,1000),bgcolor=(0.4824, 0.4824, 0.4902),fgcolor=(0,0,0))
+    
     first_points = convert_str2tup(MAIN_LIST[1])
+    i = 1
+    print(i)
+    single_log = MAIN_LIST[i]
+    print(single_log)
+    time = single_log.split()[0]
+    states = convert_str2tup(single_log)
+    
+    
 
-#     array_points = []
-#     for p in first_points:
-#         new_poin, = ax.plot([p[0]],[p[1]],[p[2]],'o',s=5)
-#         array_points.append(new_poin)
+    all_positions = []
 
-
-
-   
-    anim_running = True
-    def onClick(event):
-        print(event.key)
-        #nonlocal interval_speed
-        if event.key == 'enter':
-            nonlocal anim_running
-            if anim_running:
-                ani.event_source.stop()
-                anim_running = False
-            else:
-                ani.event_source.start()
-                anim_running = True
+    # update properties
+    color_ind = 1
+    count = 0
+    for coordinate in states:
+        new_x = coordinate[0]
+        new_y = coordinate[1]
+        new_z = coordinate[2]
+        obst = True if coordinate[3]==2 else False
         
-        elif event.key == 'up':
-            #interval_speed -= 100
-            pass
+        Surface.append(create_surface(RADIUS, new_x, new_y, new_z, color_ind, AGENT_NUMBER,obst))
+        color_ind += 1        
+    
+    txt = mlab.title('travel time', color=(1,1,1),size=0.5,figure=fig)
+    #mlab.axes(figure = fig,xlabel='X', ylabel='Y', zlabel='Z',extent=(X_MIN,X_MAX,Y_MIN,Y_MAX, Z_MIN,Z_MAX),color=(0,0,0)
+            # ,line_width=5)
+    
+    txt.text = 'travel time = {}'.format(time)
+    print(txt.text)
+    
+    @mlab.animate(delay=40)
+    def anim(main_list):
 
-        elif event.key == 'down':
-            #interval_speed += 100
-            pass
+        for i in range(2,len(MAIN_LIST)):
+            print(i)
+            single_log = MAIN_LIST[i]
+            print(single_log)
+            time = single_log.split()[0]
+            states = convert_str2tup(single_log)
+            txt.text = 'travel time = {}'.format(time)
+            print(txt.text)
 
-    txt = fig.suptitle('')
-    def update_points(index, single_log, main_list):
-        #in next version ====>>> comment next line and find single_log from input
-        #print(index)
-        single_log = main_list[index + 1]
-        print(single_log)
-        time = single_log.split()[0]
-        states = convert_str2tup(single_log)
-        txt.set_text('travel time = {}'.format(time)) 
+            all_positions = []
 
-        all_positions = []
-        ax.collections.clear()
-        # update properties
-        color_ind = 1
-        for coordinate in states:
-            new_x = coordinate[0]
-            new_y = coordinate[1]
-            new_z = coordinate[2]
-#             point.set_data(new_x,new_y)
-#             point.set_3d_properties(new_z, 'z')
-            create_surface(ax, REDUCE, new_x, new_y, new_z, color_ind, AGENT_NUMBER)
-            color_ind += 1
-            all_positions.append((new_x, new_y, new_z))
+            # update properties
+            color_ind = 1
+            count = 0
+            for coordinate in states:
+                new_x = coordinate[0]
+                new_y = coordinate[1]
+                new_z = coordinate[2]
 
-        collisions_points = check_collision(all_positions, REDUCE)
-        if not len(collisions_points) == 0:
-            #txt.set_text("--COLLISION BETWEEN {}--".format(collisions_points))
-            print(bcolors.FAIL + "--COLLISION NUMBER : {} \nCOLLISION BETWEEN {}--".format(len(collisions_points), collisions_points)+bcolors.ENDC)
-            txt.set_text("COLLISTION")
-        return txt
+                all_positions.append((new_x, new_y, new_z))
+                
+                
+                u = np.linspace(0, 2 * np.pi, 100)
+                v = np.linspace(0, np.pi, 100)
+                x = RADIUS * np.outer(np.cos(u), np.sin(v)) + new_x
+                y = RADIUS * np.outer(np.sin(u), np.sin(v)) + new_y
+                z = RADIUS * np.outer(np.ones(np.size(u)), np.cos(v)) + new_z
 
+                Surface[count].mlab_source.reset(x = x,y = y,z = z)
+                count += 1
+            
+            collisions_points = check_collision(all_positions, RADIUS)
 
-    fig.canvas.mpl_connect('key_press_event', onClick)
+            if not len(collisions_points) == 0:
+                print(bcolors.FAIL + "--COLLISION NUMBER : {} \nCOLLISION BETWEEN {}--".format(len(collisions_points), collisions_points)+bcolors.ENDC)
+                txt.text = ("COLLISTION")   
+                
+            yield
 
-    # in next version ====>>>>> set frames=100 for instance. because its not important
-    ani=animation.FuncAnimation(fig, update_points,
-                                interval = interval_speed,
-                                frames=len(MAIN_LIST) - 1,
-                                fargs=("", MAIN_LIST ),
-                                repeat= False
-                                )
     # #pause
     # anim.event_source.stop()
 
@@ -206,7 +203,7 @@ def main():
     #save gif
     # writergif = animation.PillowWriter(fps=30) 
     # ani.save('result.gif', writer=writergif)
-
+    anim(MAIN_LIST)
     mlab.show()
     print("THE END...")
 
@@ -214,4 +211,22 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
 

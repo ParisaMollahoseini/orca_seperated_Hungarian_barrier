@@ -22,12 +22,12 @@ HungarianAlgorithm::~HungarianAlgorithm(){}
 //********************************************************//
 // A single function wrapper for solving assignment problem.
 //********************************************************//
-double HungarianAlgorithm::Solve(vector <vector<double> >& DistMatrix, vector<int>& Assignment)
+double HungarianAlgorithm::Solve(vector <vector<long double> >& DistMatrix, vector<int>& Assignment)
 {
 	unsigned int nRows = DistMatrix.size();
 	unsigned int nCols = DistMatrix[0].size();
 
-	double *distMatrixIn = new double[nRows * nCols];
+	long double *distMatrixIn = new long double[nRows * nCols];
 	int *assignment = new int[nRows];
 	double cost = 0.0;
 
@@ -55,7 +55,7 @@ double HungarianAlgorithm::Solve(vector <vector<double> >& DistMatrix, vector<in
 //********************************************************//
 // Solve optimal solution for assignment problem using Munkres algorithm, also known as Hungarian Algorithm.
 //********************************************************//
-void HungarianAlgorithm::assignmentoptimal(int *assignment, double *cost, double *distMatrixIn, int nOfRows, int nOfColumns)
+void HungarianAlgorithm::assignmentoptimal(int *assignment, double *cost, long double *distMatrixIn, int nOfRows, int nOfColumns)
 {
 	double *distMatrix, *distMatrixTemp, *distMatrixEnd, *columnEnd, value, minValue;
 	bool *coveredColumns, *coveredRows, *starMatrix, *newStarMatrix, *primeMatrix;
@@ -203,7 +203,7 @@ void HungarianAlgorithm::buildassignmentvector(int *assignment, bool *starMatrix
 }
 
 /********************************************************/
-void HungarianAlgorithm::computeassignmentcost(int *assignment, double *cost, double *distMatrix, int nOfRows)
+void HungarianAlgorithm::computeassignmentcost(int *assignment, double *cost,long double *distMatrix, int nOfRows)
 {
 	int row, col;
 
